@@ -32,8 +32,9 @@ class PartialParse(object):
         ### Note: The root token should be represented with the string "ROOT"
         ### Note: If you need to use the sentence object to initialize anything, make sure to not directly 
         ###       reference the sentence object.  That is, remember to NOT modify the sentence object. 
-
-
+        self.stack = ["ROOT"]
+        self.buffer = sentence[:]
+        self.dependencies = []
         ### END YOUR CODE
 
 
@@ -51,8 +52,17 @@ class PartialParse(object):
         ###         1. Shift
         ###         2. Left Arc
         ###         3. Right Arc
-
-
+        if transition == "S" and len(self.buffer) > 0:
+            self.stack.append(self.buffer.pop(0))
+            return
+        elif transition == "LA" and len(self.stack) > 1:
+            child = self.stack[len(self.stack)-2]
+            parent = self.stack[len(self.stack)-1]
+        elif transition == "RA" and len(self.stack) > 1:
+            child = self.stack[len(self.stack)-1]
+            parent = self.stack[len(self.stack)-2]
+        self.dependencies.append((parent,child))
+        self.stack.remove(child)
         ### END YOUR CODE
 
     def parse(self, transitions):
@@ -102,7 +112,10 @@ def minibatch_parse(sentences, model, batch_size):
     ###             contains references to the same objects. Thus, you should NOT use the `del` operator
     ###             to remove objects from the `unfinished_parses` list. This will free the underlying memory that
     ###             is being accessed by `partial_parses` and may cause your code to crash.
-
+    partial_parses = []
+    for i in range(len(sentences)):
+        partial_parses.append(PartialParse(sentences[i]))
+    unfinished_parses = partial_parses[:]
 
     ### END YOUR CODE
 
