@@ -1,8 +1,10 @@
 Welcome to Assignment 3!
 
-We'll be using PyTorch for this assignment. If you're not familiar with PyTorch, or if you would like to review some of the fundamentals of PyTorch, the PyTorch review session is posted on Canvas under Course Videos.  
+We'll be using PyTorch for this assignment. If you're not familiar with PyTorch, or if you would like to review some of the fundamentals of PyTorch, 
+the PyTorch review session is posted on Canvas under Course Videos.  
 
-If you want to continue using your cs224n environment from assignment 1 for this assignment, please make sure you have all the dependencies listed in local_env.yml. To do so, please run: 
+If you want to continue using your cs224n environment from assignment 1 for this assignment, please make sure you have all the dependencies listed in local_env.yml. 
+To do so, please run: 
 
 # 1. Activate your old environment:
 
