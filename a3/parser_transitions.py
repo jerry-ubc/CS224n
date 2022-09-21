@@ -116,7 +116,7 @@ def minibatch_parse(sentences, model, batch_size):
     for i in range(len(sentences)):
         partial_parses.append(PartialParse(sentences[i]))
     unfinished_parses = partial_parses[:]
-
+                            #RESUME HERE!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!1
     ### END YOUR CODE
 
     return dependencies
