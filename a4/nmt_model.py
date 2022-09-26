@@ -11,6 +11,7 @@ Vera Lin <veralin@stanford.edu>
 from collections import namedtuple
 import sys
 from typing import List, Tuple, Dict, Set, Union
+from unicodedata import bidirectional
 import torch
 import torch.nn as nn
 import torch.nn.utils
@@ -76,7 +77,31 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/nn.html#torch.nn.Linear
         ###     Dropout Layer:
         ###         https://pytorch.org/docs/stable/nn.html#torch.nn.Dropout
-
+        self.encoder = nn.LSTM(input_size=embed_size,
+                               hidden_size=hidden_size,
+                               bidirectional=True)
+        self.decoder = nn.LSTMCell(input_size=(embed_size+hidden_size),
+                                   hidden_size=hidden_size)
+        #W_h, hidden state
+        self.h_projection = nn.Linear(in_features=2*hidden_size,
+                                      out_features=hidden_size,
+                                      bias=False)
+        #W_c, cell state
+        self.c_projection = nn.Linear(in_features=2*hidden_size,
+                                      out_features=hidden_size,
+                                      bias=False)
+        #W_attProj, attention projection
+        self.att_projection = nn.Linear(in_features=2*hidden_size,
+                                        out_features=hidden_size,
+                                        bias=False)
+        #concatenate attention output and decoder hidden state
+        self.combined_output_projection = nn.Linear(in_features=3*hidden_size,
+                                                    out_features=hidden_size,
+                                                    bias=False)
+        self.target_vocab_projection = nn.Linear(in_features=hidden_size,
+                                                 out_features=len(vocab.tgt),
+                                                 bias=False)
+        self.dropout = nn.Dropout(p=dropout_rate)
 
 
 
@@ -168,7 +193,7 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/torch.html#torch.cat
         ###     Tensor Permute:
         ###         https://pytorch.org/docs/stable/tensors.html#torch.Tensor.permute
-
+        X = torch.tensor(max(source_lengths), source_padded.size(dim=1), self.model_embeddings.embed_size)
 
 
 
