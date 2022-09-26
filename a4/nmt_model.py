@@ -102,9 +102,6 @@ class NMT(nn.Module):
                                                  out_features=len(vocab.tgt),
                                                  bias=False)
         self.dropout = nn.Dropout(p=dropout_rate)
-
-
-
         ### END YOUR CODE
 
 
@@ -193,8 +190,10 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/torch.html#torch.cat
         ###     Tensor Permute:
         ###         https://pytorch.org/docs/stable/tensors.html#torch.Tensor.permute
-        X = torch.tensor(max(source_lengths), source_padded.size(dim=1), self.model_embeddings.embed_size)
-
+        X = self.model_embeddings.source(source_padded)     #turns padded sentences to embedded padded sentences
+        X = pack_padded_sequence(input=X, lengths=source_lengths)
+        #apply encoder
+        #apply pad_packed_sequences
 
 
 

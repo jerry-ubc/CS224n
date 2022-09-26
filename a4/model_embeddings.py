@@ -57,8 +57,6 @@ class ModelEmbeddings(nn.Module):
         self.target = nn.Embedding(num_embeddings=len(vocab.tgt),
                                    embedding_dim=embed_size,
                                    padding_idx=tgt_pad_token_idx)
-
-
         ### END YOUR CODE
 
 
