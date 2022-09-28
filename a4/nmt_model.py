@@ -190,13 +190,15 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/torch.html#torch.cat
         ###     Tensor Permute:
         ###         https://pytorch.org/docs/stable/tensors.html#torch.Tensor.permute
-        X = self.model_embeddings.source(source_padded)     #turns padded sentences to embedded padded sentences
-        X = pack_padded_sequence(input=X, lengths=source_lengths)
-        #apply encoder
-        #apply pad_packed_sequences
-
-
-
+        X = self.model_embeddings.source(source_padded)                 #padded sentences -> embedded padded sentences
+        X = pack_padded_sequence(input=X, lengths=source_lengths)       #embedded padded sentences -> packed
+        enc_hiddens, (last_hidden, last_cell) = self.encoder(X)         #pass through encoder
+        enc_hiddens = pad_packed_sequence(sequence=enc_hiddens,batch_first=True)    #pack tensor containing padded sequences of variable length
+        init_decoder_hidden = torch.cat(last_hidden[0], last_hidden[1], 2)  #flatten hidden state 3D -> 2D
+        init_decoder_hidden = self.h_projection(init_decoder_hidden)        #apply h_projection
+        init_decoder_cell = torch.cat(last_cell[0], last_cell[1], 1)        #flatten cell state 3D -> 2D
+        init_decoder_cell = self.c_projection(init_decoder_cell)            #apply c_projection
+        dec_init_state = (init_decoder_hidden, init_decoder_cell)           #compute and return dec_init_state
         ### END YOUR CODE
 
         return enc_hiddens, dec_init_state
