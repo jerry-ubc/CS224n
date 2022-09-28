@@ -267,10 +267,15 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/torch.html#torch.cat
         ###     Tensor Stacking:
         ###         https://pytorch.org/docs/stable/torch.html#torch.stack
-
-
-
-
+        enc_hiddens_proj = self.att_projection(enc_hiddens)     #apply attention projection layer
+        Y = self.model_embeddings.target(target_padded)         #(tgt_len, b) -> (tgt_len, b, e)
+        for i in Y.split(1):                                    #iterate through time dimension of Y (i.e., batch size)
+            Y_t = torch.squeeze(input=i,dim=0)                  #squeeze Y such that (1, b, e) -> (b, e)
+            Ybar_t = torch.cat((Y_t, o_prev), dim=-1)
+            dec_state, o_t, e_t = self.step(Ybar_t, dec_state, enc_hiddens, enc_hiddens_proj, enc_masks)
+            combined_outputs.append(o_t)
+            o_prev = o_t
+        combined_outputs = torch.stack(combined_outputs, 0)     #(tgt_len) amount of (b,h) to a tensor shaped (tgt_len, b, h)
 
 
         ### END YOUR CODE
