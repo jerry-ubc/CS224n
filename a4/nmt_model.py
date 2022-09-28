@@ -276,8 +276,6 @@ class NMT(nn.Module):
             combined_outputs.append(o_t)
             o_prev = o_t
         combined_outputs = torch.stack(combined_outputs, 0)     #(tgt_len) amount of (b,h) to a tensor shaped (tgt_len, b, h)
-
-
         ### END YOUR CODE
 
         return combined_outputs
