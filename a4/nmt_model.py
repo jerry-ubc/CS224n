@@ -332,10 +332,10 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/torch.html#torch.unsqueeze
         ###     Tensor Squeeze:
         ###         https://pytorch.org/docs/stable/torch.html#torch.squeeze
-
-
-
-
+        dec_state = self.decoder(Ybar_t, dec_state)             #WHERE IS THIS FUNCTION????
+        dec_hidden, dec_cell = dec_state[0], dec_state[1]
+        e_t = torch.bmm(enc_hiddens_proj, torch.unsqueeze(dec_hidden,2))        #(b, src_len, h) x (b, h, 1) -> (b, src_len, 1)
+        e_t = torch.squeeze(e_t, dim=-1)                                        #(b, src_len, 1) -> (b, src_len)
         ### END YOUR CODE
 
         # Set e_t to -inf where enc_masks has 1
@@ -369,11 +369,12 @@ class NMT(nn.Module):
         ###         https://pytorch.org/docs/stable/torch.html#torch.cat
         ###     Tanh:
         ###         https://pytorch.org/docs/stable/torch.html#torch.tanh
-
-
-
-
-
+        alpha_t = F.softmax(e_t)
+        a_t = torch.bmm(torch.unsqueeze(alpha_t, dim=1), enc_hiddens)       #(b, 1, src_len) x (b, src_len, 2h) -> (b, 1, 2h)
+        a_t = torch.squeeze(a_t, dim=1)                                     #(b, 1, 2h) -> (b, 2h)
+        U_t = torch.cat((dec_hidden, a_t), dim=1)                           #(b, h) cat (b, 2h) -> (b, 3h)
+        V_t = self.combined_output_projection(U_t)
+        O_t = self.dropout(torch.tanh(V_t))
         ### END YOUR CODE
 
         combined_output = O_t
