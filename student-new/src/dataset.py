@@ -1,3 +1,4 @@
+from math import trunc
 import random
 import torch
 from torch.utils.data import Dataset
@@ -168,7 +169,83 @@ class CharCorruptionDataset(Dataset):
 
     def __getitem__(self, idx):
         # TODO [part e]: see spec above
-        raise NotImplementedError
+        #0. Use the idx argument of __getitem__ to retrieve the element of self.data
+        #at the given index. We'll call the resulting data entry a document.
+        document = self.data[idx]
+        #Randomly truncate the document to a length no less than 4 characters,
+        #and no more than int(self.block_size*7/8) characters.
+        trunc_len = min(len(document), random.randint(4, int(self.block_size*7/8)))
+        trunc_document = document[:trunc_len]
+        #2. Now, break the (truncated) document into three substrings:
+        #[prefix] [masked_content] [suffix]
+        #In other words, choose three strings prefix, masked_content and suffix
+        #   such that prefix + masked_content + suffix = [the original document].
+        #The length of [masked_content] should be random, and 1/4 the length of the
+        #   truncated document on average.
+        mask_len = int(random.randint(0, int(trunc_len)) / 4)
+        assert mask_len <= trunc_len
+        if (trunc_len - mask_len - 1) < 1:
+            prefix_len = 0
+        else:
+            prefix_len = random.randint(1, int(trunc_len - mask_len - 1))
+        prefix = trunc_document[:prefix_len]
+        masked_content = trunc_document[prefix_len:prefix_len + mask_len]
+        suffix = trunc_document[prefix_len + mask_len:]
+        #3. Rearrange these substrings into the following form:
+        #[prefix] MASK_CHAR [suffix] MASK_CHAR [masked_content] [pads]
+        masked_string = prefix + self.MASK_CHAR + suffix + self.MASK_CHAR + masked_content
+        num_pads = self.block_size - len(masked_string)
+        masked_string = masked_string + self.PAD_CHAR * num_pads
+        #4. We now use masked_string to construct the input and output example pair. To
+        #do so, simply take the input string to be masked_string[:-1], and the output
+        #string to be masked_string[1:]. In other words, for each character, the goal is
+        #to predict the next character in the masked string.
+        x = masked_string[:-1]
+        y = masked_string[1:]
+        #5. Making use of the vocabulary that you defined, encode the resulting input
+        #and output strings as Long tensors and return the resulting data point.
+        x = torch.LongTensor([self.stoi[c] for c in x])
+        y = torch.LongTensor([self.stoi[c] for c in y])
+        return x, y
+
+
+
+
+        # TODO [part e]: see spec above
+        document = self.data[idx]
+        # 1. randomly truncate to [4, 7/8 * block_size]
+        doc_len = len(document)
+        truncate_len = random.randint(4, int(self.block_size * 7 / 8))
+        truncate_len = min(doc_len, truncate_len)
+        truncated_doc = document[:truncate_len]
+        # 2. break to [prefix] [masked_content] [suffix]
+        masked_len = random.randint(int(1 / 8 * truncate_len), int(3 / 8 * truncate_len))
+        #assert truncate_len >= 4
+        
+        if (truncate_len - masked_len - 1) < 1:
+            prefix_len = 0
+            #print("{} {} {}".format(str(doc_len), str(truncate_len), str(masked_len)))
+        else:
+            prefix_len = random.randint(1, truncate_len - masked_len - 1)
+
+        prefix = truncated_doc[:prefix_len]
+        masked_content = truncated_doc[prefix_len:prefix_len + masked_len]
+        suffix = truncated_doc[prefix_len + masked_len:]
+
+        # 3. rearrange to masked_string: [prefix] MASK_CHAR [suffix] MASK_CHAR [masked_content] [pads]
+        masked_string = prefix + self.MASK_CHAR + suffix + self.MASK_CHAR + masked_content + self.PAD_CHAR * (
+            self.block_size - truncate_len - 2)
+        assert len(masked_string) == self.block_size
+
+        # 4. input = masked_string[:-1], output = masked_string[1:]
+        x = masked_string[:-1]
+        y = masked_string[1:]
+
+        # 5. encode to Long tensors
+        x = torch.LongTensor([self.stoi[c] for c in x])
+        y = torch.LongTensor([self.stoi[c] for c in y])
+        return x, y
+
 
 """
 Code under here is strictly for your debugging purposes; feel free to modify
@@ -183,17 +260,17 @@ if __name__ == '__main__':
 
     if args.dataset_type == 'namedata':
         # Even if it hasn't been implemented, we use it to define the vocab
-        corruption_dataset = CharCorruptionDataset(open('wiki.txt').read(), 128) 
+        corruption_dataset = CharCorruptionDataset(open('wiki.txt', encoding="utf-8").read(), 128) 
         # Make the name dataset
         name_dataset = NameDataset(corruption_dataset,
-            open('birth_places_train.tsv').read())
+            open('birth_places_train.tsv', encoding="utf-8").read())
         for _, example in zip(range(4), name_dataset):
             x, y = example
             print('x:', ''.join([name_dataset.itos[int(c)] for c in x]))
             print('y:', ''.join([name_dataset.itos[int(c)] for c in y]))
         pass
     elif args.dataset_type == 'charcorruption':
-        corruption_dataset = CharCorruptionDataset(open('wiki.txt').read(), 128) 
+        corruption_dataset = CharCorruptionDataset(open('wiki.txt', encoding="utf-8").read(), 128) 
         for _, example in zip(range(4), corruption_dataset):
             x, y = example
             print('x:', ''.join([corruption_dataset.itos[int(c)] for c in x]))
