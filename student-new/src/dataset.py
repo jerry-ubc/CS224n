@@ -209,44 +209,6 @@ class CharCorruptionDataset(Dataset):
         return x, y
 
 
-
-
-        # TODO [part e]: see spec above
-        document = self.data[idx]
-        # 1. randomly truncate to [4, 7/8 * block_size]
-        doc_len = len(document)
-        truncate_len = random.randint(4, int(self.block_size * 7 / 8))
-        truncate_len = min(doc_len, truncate_len)
-        truncated_doc = document[:truncate_len]
-        # 2. break to [prefix] [masked_content] [suffix]
-        masked_len = random.randint(int(1 / 8 * truncate_len), int(3 / 8 * truncate_len))
-        #assert truncate_len >= 4
-        
-        if (truncate_len - masked_len - 1) < 1:
-            prefix_len = 0
-            #print("{} {} {}".format(str(doc_len), str(truncate_len), str(masked_len)))
-        else:
-            prefix_len = random.randint(1, truncate_len - masked_len - 1)
-
-        prefix = truncated_doc[:prefix_len]
-        masked_content = truncated_doc[prefix_len:prefix_len + masked_len]
-        suffix = truncated_doc[prefix_len + masked_len:]
-
-        # 3. rearrange to masked_string: [prefix] MASK_CHAR [suffix] MASK_CHAR [masked_content] [pads]
-        masked_string = prefix + self.MASK_CHAR + suffix + self.MASK_CHAR + masked_content + self.PAD_CHAR * (
-            self.block_size - truncate_len - 2)
-        assert len(masked_string) == self.block_size
-
-        # 4. input = masked_string[:-1], output = masked_string[1:]
-        x = masked_string[:-1]
-        y = masked_string[1:]
-
-        # 5. encode to Long tensors
-        x = torch.LongTensor([self.stoi[c] for c in x])
-        y = torch.LongTensor([self.stoi[c] for c in y])
-        return x, y
-
-
 """
 Code under here is strictly for your debugging purposes; feel free to modify
 as desired.
